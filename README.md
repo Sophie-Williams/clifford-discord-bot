@@ -1,2 +1,2 @@
 # zg-discordbot
-THe Zealot Gaming Discord Bot development repository.
+The Zealot Gaming Discord Bot development repository.
