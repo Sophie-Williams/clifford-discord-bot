@@ -12,14 +12,14 @@ class Roster:
         self.bot = bot
 
     # COMMAND: !roster
-    @commands.group(pass_context=True, invoke_without_subcommand=True)
-    async def roster(self, ctx, game_abv: str):
+    @commands.group(invoke_without_subcommand=True, pass_context=True)
+    async def roster(self, ctx, *, game_abv: str):
         """Handles Roster Management."""
 
         # Does Game Abbreviation Exist?
         if not is_game_abv(game_abv):
-            await self.bot.say('Invalid roster command passed. Must be *add*, *edit*, *list*, or *remove*, or a valid '
-                               'game abbreviation must be passed to display a roster.')
+            await self.bot.say('Invalid roster command passed. Must be *add*, *edit*, *list*, or *remove*, or a '
+                               'valid game abbreviation must be passed to display a roster.')
             return
 
         # Handle Database
