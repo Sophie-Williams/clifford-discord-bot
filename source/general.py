@@ -135,10 +135,12 @@ class General:
                          'Overwatch',
                          'League of Legends',
                          'Co-op',
-                         'Minna-chan']
+                         'Minna-chan',
+                         'Squire']
 
         if role_name not in allowed_roles:
-            await self.bot.say('{0.mention}, you may only join allowed public groups.'.format(ctx.message.author))
+            await self.bot.say('{0.mention}, you may only join allowed public groups. Check #info for a list of groups.'
+                               .format(ctx.message.author))
             return
 
         # Define role, then add role to member.
