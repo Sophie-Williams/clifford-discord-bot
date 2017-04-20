@@ -12,12 +12,43 @@ class Roster:
         self.bot = bot
 
     # COMMAND: !roster
-    @commands.group(pass_context=True)
-    async def roster(self, ctx):
+    @commands.group(pass_context=True, invoke_without_subcommand=True)
+    async def roster(self, ctx, game_abv: str):
         """Handles Roster Management."""
 
-        if ctx.invoked_subcommand is None:
-            await self.bot.say('Invalid roster command passed. Must be *add*, *edit*, *list*, or *remove*.')
+        # Does Game Abbreviation Exist?
+        if not is_game_abv(game_abv):
+            await self.bot.say('Invalid roster command passed. Must be *add*, *edit*, *list*, or *remove*, or a valid '
+                               'game abbreviation must be passed to display a roster.')
+            return
+
+        # Handle Database
+        try:
+            sql = "SELECT `discord_account`, `game_account` FROM roster WHERE `game_abv` = %s ORDER BY `discord_account`"
+            cur = db.cursor()
+            cur.execute(sql, (game_abv,))
+            result = cur.fetchall()
+            cur.close()
+        except Exception:
+            await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the roster for"
+                                                             " you. I'm sorry!".format(ctx.message.author))
+            return
+
+        # Create Variables for Embed Table
+        accounts = ''
+        names = ''
+
+        for row in result:
+            accounts += (row[0] + '\n')
+            names += (row[1] + '\n')
+
+        # Create Embed Table
+        embed = discord.Embed()
+        embed.add_field(name="Discord Account", value=accounts, inline=True)
+        embed.add_field(name="In-Game Name", value=names, inline=True)
+
+        # Send Table to Channel
+        await self.bot.send_message(ctx.message.channel, embed=embed)
 
     # COMMAND: !roster add
     @roster.command(name='add', pass_context=True)
