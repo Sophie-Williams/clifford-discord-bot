@@ -12,16 +12,43 @@ class Recruitment:
         self.bot = bot
 
     # COMMAND: !recruit
-    @commands.group(pass_context=True)
+    @commands.group(pass_context=True, invoke_without_command=True)
     async def recruit(self, ctx):
         """Handles Recruitment Post and Invites Management."""
 
-        if ctx.invoked_subcommand is None:
-            await self.bot.say('Invalid recruitment command passed. Must be *add*, *edit*, *invite*, *list*, or '
-                               '*remove*.')
+        # Handle Database
+        try:
+            sql = "SELECT * FROM recruitment ORDER BY `game`"
+            cur = db.cursor()
+            cur.execute(sql)
+            result = cur.fetchall()
+            cur.close()
+        except Exception:
+            await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the recruitment "
+                                                             "list for you. I'm sorry!".format(ctx.message.author))
+            return
+
+        # Create Variables for Embed Table
+        entries = ''
+        game_abvs = ''
+        links = ''
+
+        for row in result:
+            entries += (str(row[0]) + '\n')
+            game_abvs += (str(row[1]) + '\n')
+            links += (str(row[2]) + '\n')
+
+        # Create Embed Table
+        embed = discord.Embed()
+        embed.add_field(name="ID", value=entries, inline=True)
+        embed.add_field(name="Game", value=game_abvs, inline=True)
+        embed.add_field(name="Link", value=links, inline=True)
+
+        # Send Table to Channel
+        await self.bot.send_message(ctx.message.channel, embed=embed)
 
     # COMMAND: !recruit add
-    @recruit.command(name='add', pass_context=True)
+    @recruit.command(name='add', pass_context=True, aliases=['insert'])
     async def recruit_add(self, ctx, game_abv: str, *, link: str):
         """Adds recruitment post link to the recruitment list. Use a game abbreviation from the games list."""
 
@@ -54,7 +81,7 @@ class Recruitment:
                            'posts list!'.format(ctx))
 
     # COMMAND: !recruit edit
-    @recruit.command(name='edit', pass_context=True)
+    @recruit.command(name='edit', pass_context=True, aliases=['update'])
     async def recruit_edit(self, ctx, entry_id: int, *, link: str):
         """Updates a recruitment post entry with the specified entry ID."""
 
@@ -80,7 +107,7 @@ class Recruitment:
         await self.bot.say('{0.message.author.mention}, the recruitment entry was successfully updated!'.format(ctx))
 
     # COMMAND: !recruit remove
-    @recruit.command(name='remove', pass_context=True)
+    @recruit.command(name='remove', pass_context=True, aliases=['delete'])
     async def recruit_remove(self, ctx, entry_id: int):
         """Removes an entry for the recruitment posts list with the specified entry ID."""
 
@@ -104,42 +131,6 @@ class Recruitment:
 
         # Display Success Message
         await self.bot.say('{0.message.author.mention}, the recruitment entry was successfully deleted!'.format(ctx))
-
-    # COMMAND: !recruit list
-    @recruit.command(name='list', pass_context=True)
-    async def recruit_list(self, ctx):
-        """Lists all recruitment post entries in the system."""
-
-        # Handle Database
-        try:
-            sql = "SELECT * FROM recruitment ORDER BY `game`"
-            cur = db.cursor()
-            cur.execute(sql)
-            result = cur.fetchall()
-            cur.close()
-        except Exception:
-            await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the recruitment "
-                                                             "list for you. I'm sorry!".format(ctx.message.author))
-            return
-
-        # Create Variables for Embed Table
-        entries = ''
-        game_abvs = ''
-        links = ''
-
-        for row in result:
-            entries += (str(row[0]) + '\n')
-            game_abvs += (str(row[1]) + '\n')
-            links += (str(row[2]) + '\n')
-
-        # Create Embed Table
-        embed = discord.Embed()
-        embed.add_field(name="ID", value=entries, inline=True)
-        embed.add_field(name="Game", value=game_abvs, inline=True)
-        embed.add_field(name="Link", value=links, inline=True)
-
-        # Send Table to Channel
-        await self.bot.send_message(ctx.message.channel, embed=embed)
 
     # COMMAND: !recruit invite
     @recruit.command(name='invite')
