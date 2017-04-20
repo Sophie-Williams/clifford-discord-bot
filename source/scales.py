@@ -1,7 +1,69 @@
 import discord
 from discord.ext import commands
 from helpers import db, is_staff
-import time
+from datetime import datetime, timedelta
+import random
+
+
+# Check if User Has Been Initialized with Scales
+def has_scales(member: discord.Member):
+    # Query Database
+    sql = "SELECT 1 FROM scales WHERE `username` = %s"
+    cur = db.cursor()
+    cur.execute(sql, (str(member),))
+    entry = cur.fetchone()
+    db.commit()
+    cur.close()
+
+    # Return the Result (True/False)
+    if entry is not None:
+        return entry[0] == 1
+    else:
+        return False
+
+
+# Initialize User with Scales
+def start_scales(member: discord.Member):
+
+    if not has_scales(member):
+        # Initialize to Zero
+        sql = "INSERT INTO scales (`username`) VALUES (%s)"
+        cur = db.cursor()
+        cur.execute(sql, (str(member),))
+        db.commit()
+        cur.close()
+
+
+# Get User's Current Scales
+def get_scales(member: discord.Member):
+    # Query Database
+    sql = "SELECT `total` FROM scales WHERE `username` = %s"
+    cur = db.cursor()
+    cur.execute(sql, (str(member),))
+    entry = cur.fetchone()
+    db.commit()
+    cur.close()
+
+    # Return the Number of Scales
+    if entry[0] is not None:
+        return entry[0]
+    else:
+        return 0
+
+
+# Add Scales to User's Total
+def add_scales(member: discord.Member, scales: int):
+
+    # Get Users Current Scales
+    current_scales = get_scales(member)
+    new_scales = current_scales + scales
+
+    # Give Points to User
+    sql = "UPDATE scales SET `total` = %s WHERE username = %s"
+    cur = db.cursor()
+    cur.execute(sql, (new_scales, str(member)))
+    db.commit()
+    cur.close()
 
 
 # ********************************************** #
@@ -12,92 +74,89 @@ class Scales:
     def __init__(self, bot):
         self.bot = bot
 
-    # Check if User Has Been Initialized with Scales
-    @staticmethod
-    def has_scales(member: discord.Member):
-        # Query Database
-        sql = "SELECT 1 FROM scales WHERE `username` = %s"
-        cur = db.cursor()
-        cur.execute(sql, (str(member),))
-        entry = cur.fetchone()
-        cur.close()
-
-        # Return the Result (True/False)
-        return entry[0] == 1
-
-    # Initialize User with Scales
-    @staticmethod
-    def start_scales(member: discord.Member):
-
-        if not has_scales(member):
-            # Initialize to Zero
-            sql = "INSERT INTO scales (`username`) VALUES (%s)"
-            cur = db.cursor()
-            cur.execute(sql, (str(member),))
-            db.commit()
-            cur.close()
-
-    # Get User's Current Scales
-    @staticmethod
-    def get_scales(member: discord.Member):
-        # Query Database
-        sql = "SELECT `total` FROM scales WHERE `username` = %s"
-        cur = db.cursor()
-        cur.execute(sql, (str(member),))
-        entry = cur.fetchone()
-        cur.close()
-
-        # Return the Number of Scales
-        if entry[0] is not None:
-            return entry[0]
-        else:
-            return 0
-
-    # Add Scales to User's Total
-    @staticmethod
-    def add_scales(member: discord.Member, scales: int):
-
-        # Get Users Current Scales
-        current_scales = get_scales(member)
-        new_scales = current_scales + scales
-
-        # Give Points to User
-        sql = "UPDATE scales SET `total` = %s WHERE username = %s"
-        cur = db.cursor()
-        cur.execute(sql, (new_scales, str(member)))
-
-    # COMMAND: !claim
-    @commands.command(name='claim', pass_context=True)
-    async def claim_scales(self, ctx):
+    # COMMAND: !daily
+    @commands.command(name='daily', pass_context=True)
+    async def daily_scales(self, ctx):
         """Allows users to claim their daily scales."""
 
+        # Is the user initialized?
+        member = ctx.message.author
+        if not has_scales(member):
+            start_scales(member)
+
         # Has the user already claimed scales today?
-        today = time.strftime("%Y/%m/%d")
+        today = datetime.now()
+        today_date = today.date()
 
-        # Is the user allowed? (Must be Staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
+        # Get User's Last Claim Date
+        sql = "SELECT `last_claimed_date` FROM scales WHERE username = %s"
+        cur = db.cursor()
+        cur.execute(sql, (str(member),))
+        result = cur.fetchone()
+        db.commit()
+        cur.close()
+        if result[0] is not None:
+            last_date = datetime.strptime(str(result[0]), "%Y-%m-%d").date()
+        else:
+            last_date = today_date - timedelta(1)
+
+        # If they haven't claimed today, determine how many scales they should get
+
+        if last_date >= today_date:
+            await self.bot.say("{0.mention}, you already claimed scales today!".format(member))
             return
 
-        if role_name not in allowed_roles:
-            await self.bot.say('{0.mention}, you may only assign users to public roles, Squire, Knight, or Zealot.'
-                               .format(ctx.message.author))
-            return
+        # Determine number of points to award
+        if 'Squire' in [r.name for r in member.roles]:
+            added_scales = 1
+        elif 'Knight' in [r.name for r in member.roles]:
+            added_scales = 2
+        elif 'Zealot' in [r.name for r in member.roles]:
+            added_scales = 5
+        else:
+            added_scales = 0
 
-        # Define role, then add role to member.
+        # See if they will get double points
+        if random.randint(1, 100) == random.randint(1, 100):
+            added_scales *= 2
+            bonus = True
+        else:
+            bonus = False
+
+        # Grant the Scales to the User
         try:
-            role = discord.utils.get(ctx.message.server.roles, name=role_name)
-            user = discord.utils.get(ctx.message.server.members, name=username)
-            await self.bot.add_roles(user, role)
+            add_scales(member, added_scales)
+            sql = "UPDATE scales SET `last_claimed_date` = %s WHERE `username` = %s"
+            cur = db.cursor()
+            cur.execute(sql, (datetime.strftime(today, "%Y-%m-%d"), str(member)))
+            db.commit()
+            cur.close()
         except Exception as e:
-            await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an granting the role to the user. "
-                                        .format(ctx.message.author) + str(e))
+            await self.bot.say("{0.mention}, there was an error awarding you your scales. ".format(member) + str(e))
             return
 
-        # Success Message
-        await self.bot.say('{0.mention}, you have successfully added **{1}** to the group **{2}**.'
-                           .format(ctx.message.author, username, role_name))
+        # Send Message
+        if bonus:
+            await self.bot.say("{0.mention}, you got **lucky** and claimed **{1}** "
+                               "<:clifford_scales:303675725527908353> (scales) today!".format(member, added_scales))
+        else:
+            await self.bot.say("{0.mention}, you claimed **{1}** <:clifford_scales:303675725527908353> (scales) today!"
+                               .format(member, added_scales))
+
+    # COMMAND: !scales
+    @commands.command(name='scales', pass_context=True)
+    async def user_scales(self, ctx):
+
+        member = ctx.message.author
+
+        # Display User's Scales
+        if has_scales(member):
+            scales = get_scales(member)
+            await self.bot.say("{0.mention}, you currently have **{1}** <:clifford_scales:303675725527908353> (scales)"
+                               .format(member, scales))
+        else:
+            await self.bot.say("{0.mention}, you do not have any <:clifford_scales:303675725527908353> (scales)"
+                               .format(member))
 
 
 def setup(bot):
