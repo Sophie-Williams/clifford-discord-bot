@@ -20,7 +20,7 @@ class Events:
             await self.bot.say('Invalid command passed. Must be *add*, *description*, *edit*, *register*, or *remove*.')
 
     # COMMAND: !events add
-    @events.command(name='add', pass_context=True)
+    @events.command(name='add', pass_context=True, aliases=['create'])
     async def events_add(self, ctx, date: str, time: str, *, title: str):
         """Add an event to the Events List!
            Date **must** be in YYYY/MM/DD format. Time **must** be in UTC."""
@@ -76,7 +76,7 @@ class Events:
                            .format(ctx.message.author, event_id))
 
     # COMMAND: !events description
-    @events.command(name='description', pass_context=True)
+    @events.command(name='description', pass_context=True, aliases=['desc', 'describe'])
     async def events_description(self, ctx, event_id: int, *, desc: str):
         """Adds a Description to an Event Given an Event ID."""
 
