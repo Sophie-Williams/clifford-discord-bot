@@ -107,18 +107,14 @@ class Scales:
             return
 
         # Determine number of points to award
-        if 'Squire' in [r.name for r in member.roles]:
-            added_scales = 1
-        elif 'Knight' in [r.name for r in member.roles]:
-            added_scales = 2
-        elif 'Zealot' in [r.name for r in member.roles]:
-            added_scales = 5
-        else:
-            added_scales = 0
+        added_scales = random.randint(1, 5)
 
         # See if they will get double points
         if random.randint(1, 100) == random.randint(1, 100):
             added_scales *= 2
+
+        # They only appear lucky if they get more than 5
+        if added_scales > 5:
             bonus = True
         else:
             bonus = False
