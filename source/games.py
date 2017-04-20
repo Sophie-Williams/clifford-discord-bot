@@ -12,15 +12,41 @@ class Games:
         self.bot = bot
 
     # COMMAND: !games
-    @commands.group(pass_context=True)
+    @commands.group(pass_context=True, invoke_without_command=True)
     async def games(self, ctx):
         """Manages games for the roster."""
 
-        if ctx.invoked_subcommand is None:
-            await self.bot.say('Invalid command passed. Must be *add*, *edit*, *list*, or *remove*.')
+        # Handle Database
+        try:
+            sql = "SELECT `abv`, `name` FROM games ORDER BY `name`"
+            cur = db.cursor()
+            cur.execute(sql)
+            result = cur.fetchall()
+            cur.close()
+        except Exception as e:
+            await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the list of games"
+                                                             " for you. I'm sorry! ".format(ctx.message.author) + str(
+                e))
+            return
+
+        # Create Variables for Embed Table
+        abvs = ''
+        names = ''
+
+        for row in result:
+            abvs += (row[0] + '\n')
+            names += (row[1] + '\n')
+
+        # Create Embed Table
+        embed = discord.Embed()
+        embed.add_field(name="Abbreviation", value=abvs, inline=True)
+        embed.add_field(name="Game Name", value=names, inline=True)
+
+        # Send Table to User Privately
+        await self.bot.send_message(ctx.message.channel, embed=embed)
 
     # COMMAND: !games add
-    @games.command(name='add', pass_context=True)
+    @games.command(name='add', pass_context=True, aliases=['create', 'insert'])
     async def games_add(self, ctx, game_abv: str, *, game_name: str):
         """Adds a game to the list of games available in the roster."""
 
@@ -56,7 +82,7 @@ class Games:
         await self.bot.say('{0.mention}, the game was successfully added to the games list!'.format(ctx.message.author))
 
     # COMMAND: !games edit
-    @games.command(name='edit', pass_context=True)
+    @games.command(name='edit', pass_context=True, aliases=['update', 'change'])
     async def games_edit(self, ctx, game_abv: str, *, game_name: str):
         """Updates a game in the list of games available in the roster."""
 
@@ -89,7 +115,7 @@ class Games:
                            .format(ctx.message.author))
 
     # COMMAND: !games remove
-    @games.command(name='remove', pass_context=True)
+    @games.command(name='remove', pass_context=True, aliases=['delete'])
     async def games_remove(self, ctx, *, game_or_abv: str):
         """Removes a game from the list of games available in the roster."""
 
@@ -120,39 +146,6 @@ class Games:
         # Display Success Message
         await self.bot.say('{0.mention}, the game was successfully deleted from the games list!'
                            .format(ctx.message.author))
-
-    # COMMAND: !games list
-    @games.command(name='list', pass_context=True)
-    async def games_list(self, ctx):
-        """Sends a message to the user with the current games and abbreviations for use in the roster."""
-
-        # Handle Database
-        try:
-            sql = "SELECT `abv`, `name` FROM games ORDER BY `name`"
-            cur = db.cursor()
-            cur.execute(sql)
-            result = cur.fetchall()
-            cur.close()
-        except Exception as e:
-            await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the list of games"
-                                                             " for you. I'm sorry! ".format(ctx.message.author) + str(e))
-            return
-
-        # Create Variables for Embed Table
-        abvs = ''
-        names = ''
-
-        for row in result:
-            abvs += (row[0] + '\n')
-            names += (row[1] + '\n')
-
-        # Create Embed Table
-        embed = discord.Embed()
-        embed.add_field(name="Abbreviation", value=abvs, inline=True)
-        embed.add_field(name="Game Name", value=names, inline=True)
-
-        # Send Table to User Privately
-        await self.bot.send_message(ctx.message.channel, embed=embed)
 
 
 def setup(bot):
