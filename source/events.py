@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from helpers import db, is_staff
+from helpers import db
 
 
 # ********************************************** #
@@ -21,6 +21,7 @@ class Events:
 
     # COMMAND: !events add
     @events.command(name='add', pass_context=True, aliases=['create'])
+    @commands.has_role("Staff")
     async def events_add(self, ctx, date: str, time: str, *, title: str):
         """Add an event to the Events List!
            Date **must** be in YYYY/MM/DD format. Time **must** be in UTC."""
@@ -77,6 +78,7 @@ class Events:
 
     # COMMAND: !events description
     @events.command(name='description', pass_context=True, aliases=['desc', 'describe'])
+    @commands.has_role("Staff")
     async def events_description(self, ctx, event_id: int, *, desc: str):
         """Adds a Description to an Event Given an Event ID."""
 
