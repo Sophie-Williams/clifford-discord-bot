@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from helpers import is_staff
 import random
 
 
@@ -14,14 +13,9 @@ class General:
 
     # Load Extension
     @commands.command(pass_context=True)
+    @commands.has_role("King")
     async def load(self, ctx, extension_name: str):
         """Loads an extension."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say(
-                '{0.mention}, you must be a staff member to use this command.'.format(ctx.message.author))
-            return
 
         try:
             self.bot.load_extension(extension_name)
@@ -32,14 +26,9 @@ class General:
 
     # Unload Extension
     @commands.command(pass_context=True)
+    @commands.has_role("King")
     async def unload(self, ctx, extension_name: str):
         """Unloads an extension."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say(
-                '{0.mention}, you must be a staff member to use this command.'.format(ctx.message.author))
-            return
 
         self.bot.unload_extension(extension_name)
         await self.bot.say("{} unloaded.".format(extension_name))
@@ -113,13 +102,9 @@ class General:
 
     # COMMAND: !get_channel_id
     @commands.command(pass_context=True)
+    @commands.has_role("Staff")
     async def get_channel_id(self, ctx):
         """Lists the ID of the channel the message is sent in."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'.format(ctx.message.author))
-            return
 
         await self.bot.say('Channel ID is {0.id}'.format(ctx.message.channel))
 
@@ -135,8 +120,7 @@ class General:
                          'Overwatch',
                          'League of Legends',
                          'Co-op',
-                         'Minna-chan',
-                         'Squire']
+                         'Minna-chan']
 
         if role_name not in allowed_roles:
             await self.bot.say('{0.mention}, you may only join allowed public groups. Check #info for a list of groups.'
@@ -155,6 +139,32 @@ class General:
         # Success Message
         await self.bot.say('{0.mention}, you have successfully been added to the group **{1}**'
                            '.'.format(ctx.message.author, role_name))
+
+    # COMMAND: !register
+    @commands.command(pass_context=True)
+    async def register(self, ctx):
+        """Allows a user to register officially and become a Squire."""
+
+        # List of Allowed Public Roles
+        member = ctx.message.author
+        role_names = [r.name for r in member.roles]
+        registered_roles = ['Squire', 'Knight', 'Zealot']
+        squire = discord.utils.get(ctx.message.server.roles, name='Squire')
+
+        if not set(role_names) & set(registered_roles):
+
+            # Define role, then add role to member.
+            try:
+                await self.bot.add_roles(member, squire)
+            except Exception as e:
+                await self.bot.say('There was an error registering you'.format(ctx.message.author) + str(e))
+                return
+
+            # Success Message
+            await self.bot.say('{0.mention}, you have successfully registered and been promoted to **Squire**'
+                               .format(member))
+        else:
+            await self.bot.say('{0.mention}, you are already registered!'.format(member))
 
 
 def setup(bot):
