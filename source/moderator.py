@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from helpers import db, is_staff
+from helpers import db
 
 
 # ********************************************** #
@@ -11,8 +11,17 @@ class Moderator:
     def __init__(self, bot):
         self.bot = bot
 
+    # COMMAND: !set_game
+    @commands.command()
+    @commands.has_role("King")
+    async def set_game(self, *, game_name: str):
+        """Sets Clifford's currently playing game.."""
+
+        await self.bot.change_presence(game=discord.Game(name=game_name))
+
     # COMMAND: !give_role
     @commands.command(pass_context=True)
+    @commands.has_role("Staff")
     async def give_role(self, ctx, username: str, *, role_name: str):
         """Assigns a role to a user."""
 
@@ -27,12 +36,6 @@ class Moderator:
                          'Squire',
                          'Knight',
                          'Zealot']
-
-        # Is the user allowed? (Must be Staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         if role_name not in allowed_roles:
             await self.bot.say('{0.mention}, you may only assign users to public roles, Squire, Knight, or Zealot'
@@ -55,14 +58,9 @@ class Moderator:
 
     # COMMAND: !kick
     @commands.command(name='kick', pass_context=True)
+    @commands.has_role("Staff")
     async def mod_kick(self, ctx, username: str, *, reason: str):
         """Kicks a user from the server."""
-
-        # User must be a staff member
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Add to DB and Post Message
         try:
@@ -104,14 +102,9 @@ class Moderator:
 
     # COMMAND: !ban
     @commands.command(name='ban', pass_context=True)
+    @commands.has_role("Staff")
     async def mod_ban(self, ctx, username: str, *, reason: str):
         """Bans a user from the server."""
-
-        # User must be a staff member
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Add to DB and Post Message
         try:
@@ -153,14 +146,9 @@ class Moderator:
 
     # COMMAND: !unban
     @commands.command(name='unban', pass_context=True)
+    @commands.has_role("Staff")
     async def mod_unban(self, ctx, username: str, *, reason: str):
         """Unbans a user from the server."""
-
-        # User must be a staff member
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Add to DB and Post Message
         try:
