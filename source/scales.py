@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from helpers import db, is_staff
+from helpers import db
 from datetime import datetime, timedelta
 import random
 
@@ -64,6 +64,29 @@ def add_scales(member: discord.Member, scales: int):
     cur.execute(sql, (new_scales, str(member)))
     db.commit()
     cur.close()
+
+
+# Used for Roulette
+allowed_bets = ["even", "odd", "red", "black"]
+dictionary_even_odd = {}
+for i in list(range(0, 37)):
+    allowed_bets.append(str(i))
+    if i == 0:
+        dictionary_even_odd[i] = "zero"
+    elif i % 2 == 0:
+        dictionary_even_odd[i] = "even"
+    else:
+        dictionary_even_odd[i] = "odd"
+dictionary_red_black = {}
+red = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36]
+for i in list(range(0, 37)):
+    if i == 0:
+        dictionary_red_black[i] = "none"
+    elif i in red:
+        dictionary_red_black[i] = "red"
+    else:
+        dictionary_red_black[i] = "black"
+
 
 
 # ********************************************** #
@@ -142,6 +165,7 @@ class Scales:
     # COMMAND: !scales
     @commands.command(name='scales', pass_context=True)
     async def user_scales(self, ctx):
+        """Display's a users current scales."""
 
         member = ctx.message.author
 
@@ -153,6 +177,67 @@ class Scales:
         else:
             await self.bot.say("{0.mention}, you do not have any <:clifford_scales:303675725527908353> (scales)"
                                .format(member))
+
+    # COMMAND: !roulette
+    @commands.command(name='roulette', pass_context=True)
+    async def scales_roulette(self, ctx, bet_amount: int, bet_on: str):
+        """Gamble some scales on Roulette! Allows only red/black, odd/even, or single number bets."""
+
+        member = ctx.message.author
+
+        # User must have scales
+        if not has_scales(member):
+            await self.bot.say("{0.mention}, you must have scales to play Roulette!".format(member))
+            return
+
+        # User must have scales to cover the bet.
+        if bet_amount > get_scales(member):
+            await self.bot.say("{0.mention}, you cannot bet more scales than you have!".format(member))
+            return
+
+        # Bet type must be allowed
+        if bet_on not in allowed_bets:
+            await self.bot.say("{0.mention}, bets must be *red*, *black*, *even*, *odd*, or a number 0-36."
+                               .format(member))
+            return
+
+        # We Have the Scales, Roll!
+        roll_result = random.randint(0, 36)
+        if dictionary_red_black[roll_result] == "red":
+            color = "Red"
+        elif dictionary_red_black[roll_result] == "black":
+            color = "Black"
+        else:
+            color = "Green"
+        await self.bot.say(":game_die: The roulette wheel landed on **{0} {1}**! :slot_machine:"
+                           .format(roll_result, color))
+
+        # Set Payouts and Whatnot
+        win = False;
+        scales_won = (bet_amount * -1)
+        if (bet_on == "red" and dictionary_red_black[roll_result] == "red") or \
+           (bet_on == "black" and dictionary_red_black[roll_result] == "black") or \
+           (bet_on == "even" and dictionary_even_odd[roll_result] == "even") or \
+           (bet_on == "odd" and dictionary_even_odd[roll_result] == "odd"):
+            win = True
+            scales_won = bet_amount
+            payout_rate = "1:1"
+        elif bet_on == str(roll_result):
+            win = True
+            scales_won = (bet_amount * 35)
+            payout_rate = "35:1"
+
+        # Finish and Output Message
+        try:
+            add_scales(member, scales_won)
+            if win:
+                await self.bot.say("{0.mention}, you won **{1}** <:clifford_scales:303675725527908353> (scales) playing"
+                                   " Roulette! Payout for your bet was {2}.".format(member, scales_won, payout_rate))
+            else:
+                await self.bot.say("{0.mention}, you lost your scales <:clifford_scales:303675725527908353> (scales)"
+                                   .format(member))
+        except Exception as e:
+            await self.bot.say("There was an error adding scales: " + str(e))
 
 
 def setup(bot):
