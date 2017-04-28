@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from helpers import db, is_staff, is_game_abv, is_game_name
+from helpers import db, is_game_abv, is_game_name
 
 
 # ********************************************** #
@@ -47,14 +47,9 @@ class Games:
 
     # COMMAND: !games add
     @games.command(name='add', pass_context=True, aliases=['create', 'insert'])
+    @commands.has_role("Staff")
     async def games_add(self, ctx, game_abv: str, *, game_name: str):
         """Adds a game to the list of games available in the roster."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Does Game Abbreviation Exist?
         if is_game_abv(game_abv):
@@ -83,14 +78,9 @@ class Games:
 
     # COMMAND: !games edit
     @games.command(name='edit', pass_context=True, aliases=['update', 'change'])
+    @commands.has_role("Staff")
     async def games_edit(self, ctx, game_abv: str, *, game_name: str):
         """Updates a game in the list of games available in the roster."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Is there anything to update?
         if not (is_game_abv(game_abv) or is_game_name(game_name)):
@@ -116,14 +106,9 @@ class Games:
 
     # COMMAND: !games remove
     @games.command(name='remove', pass_context=True, aliases=['delete'])
+    @commands.has_role("Staff")
     async def games_remove(self, ctx, *, game_or_abv: str):
         """Removes a game from the list of games available in the roster."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Is there anything to update?
         if not (is_game_abv(game_or_abv) or is_game_name(game_or_abv)):
