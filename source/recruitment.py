@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from helpers import db, is_staff, is_game_abv
+from helpers import db, is_game_abv
 
 
 # ********************************************** #
@@ -49,13 +49,9 @@ class Recruitment:
 
     # COMMAND: !recruit add
     @recruit.command(name='add', pass_context=True, aliases=['insert'])
+    @commands.has_role("Staff")
     async def recruit_add(self, ctx, game_abv: str, *, link: str):
         """Adds recruitment post link to the recruitment list. Use a game abbreviation from the games list."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'.format(ctx.message.author))
-            return
 
         # Does Game Abbreviation Exist?
         if not is_game_abv(game_abv) and not game_abv == 'all':
@@ -82,14 +78,9 @@ class Recruitment:
 
     # COMMAND: !recruit edit
     @recruit.command(name='edit', pass_context=True, aliases=['update'])
+    @commands.has_role("Staff")
     async def recruit_edit(self, ctx, entry_id: int, *, link: str):
         """Updates a recruitment post entry with the specified entry ID."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Handle Database
         try:
@@ -108,14 +99,9 @@ class Recruitment:
 
     # COMMAND: !recruit remove
     @recruit.command(name='remove', pass_context=True, aliases=['delete'])
+    @commands.has_role("Staff")
     async def recruit_remove(self, ctx, entry_id: int):
         """Removes an entry for the recruitment posts list with the specified entry ID."""
-
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
 
         # Handle Database
         try:
