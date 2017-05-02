@@ -38,7 +38,12 @@ class Games:
             names += (row[1] + '\n')
 
         # Create Embed Table
-        embed = discord.Embed()
+        embed = discord.Embed(title="Games List", colour=discord.Colour(0x55ff),
+                              description="*The list of available games for the roster commands, as well as their "
+                                          "abbreviations for use in those commands.*")
+        embed.set_author(name="Zealot Gaming", url="https://www.zealotgaming.com",
+                         icon_url="http://www.zealotgaming.com/discord/logos/zg.png")
+        embed.set_thumbnail(url="http://www.zealotgaming.com/discord/logos/zg.png")
         embed.add_field(name="Abbreviation", value=abvs, inline=True)
         embed.add_field(name="Game Name", value=names, inline=True)
 
