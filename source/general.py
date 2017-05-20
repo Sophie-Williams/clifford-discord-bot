@@ -119,6 +119,7 @@ class General:
                          'Oceania',
                          'Overwatch',
                          'League of Legends',
+                         'Heroes of the Storm',
                          'Co-op',
                          'Minna-chan']
 
