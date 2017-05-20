@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from helpers import db, is_game_abv
+from helpers import db, is_game_abv, get_game_icon, get_game_name
 
 
 # ********************************************** #
@@ -37,13 +37,21 @@ class Roster:
         # Create Variables for Embed Table
         accounts = ''
         names = ''
+        i = 1
 
         for row in result:
-            accounts += (row[0] + '\n')
-            names += (row[1] + '\n')
+            accounts += ('**' + str(i) + '**. ' + row[0] + '\n')
+            names += ('**' + str(i) + '**. ' + row[1] + '\n')
+            i += 1
 
         # Create Embed Table
-        embed = discord.Embed()
+        gameName = get_game_name(game_abv)
+        gameIcon = get_game_icon(game_abv)
+        embed = discord.Embed(title=gameName + " Roster", colour=discord.Colour(0x55ff),
+                              description="*The official roster for Zealot Gaming members who play " + gameName + ".*")
+        embed.set_author(name="Zealot Gaming", url="https://www.zealotgaming.com",
+                         icon_url="http://www.zealotgaming.com/discord/logos/zg.png")
+        embed.set_thumbnail(url="http://www.zealotgaming.com/discord/logos/" + gameIcon)
         embed.add_field(name="Discord Account", value=accounts, inline=True)
         embed.add_field(name="In-Game Name", value=names, inline=True)
 
