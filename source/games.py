@@ -137,6 +137,34 @@ class Games:
         await self.bot.say('{0.mention}, the game was successfully deleted from the games list!'
                            .format(ctx.message.author))
 
+    # COMMAND: !games icon
+    @games.command(name='icon', pass_context=True, aliases=['addicon'])
+    @commands.has_role("Staff")
+    async def games_icon(self, ctx, game_abv: str, *, icon: str):
+        """Removes a game from the list of games available in the roster."""
+
+        # Is there anything to update?
+        if not (is_game_abv(game_abv)):
+            await self.bot.say('{0.mention}, the abbreviation of game must exist to update.'
+                               .format(ctx.message.author))
+            return
+
+        # Handle Database
+        try:
+            sql = "UPDATE games SET `icon_url` = %s WHERE `abv` = %s"
+            cur = db.cursor()
+            cur.execute(sql, (icon, game_abv))
+            db.commit()
+            cur.close()
+        except Exception as e:
+            await self.bot.say("{0.mention}, there was an error adding the icon to the game."
+                               .format(ctx.message.author) + str(e))
+            return
+
+        # Display Success Message
+        await self.bot.say('{0.mention}, the icon was successfully added to the game!'
+                           .format(ctx.message.author))
+
 
 def setup(bot):
     bot.add_cog(Games(bot))
