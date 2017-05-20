@@ -48,7 +48,7 @@ async def on_member_join(member):
     await bot.send_message(member, wpm)
 
     # Start the Scales
-    # start_scales(member)
+    start_scales(member)
 
 
 # Check Messages and Award Scales
@@ -56,7 +56,7 @@ async def on_member_join(member):
 async def on_message(message):
     member = message.author
     legal_channels = ['general', 'zealot-lounge', 'league-of-legends', 'overwatch',
-                      'other-games', 'anime-and-manga', 'music-and-art']
+                      'heroes-of-the-storm', 'other-games', 'anime-and-manga', 'music-and-art']
 
     # If the user is participating in a normal channel
     if message.channel.name in legal_channels:
