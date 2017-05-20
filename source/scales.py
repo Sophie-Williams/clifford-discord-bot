@@ -178,6 +178,24 @@ class Scales:
             await self.bot.say("{0.mention}, you do not have any <:clifford_scales:303675725527908353> (scales)"
                                .format(member))
 
+    # COMMAND: !giftscales
+    @commands.command(name='giftscales', pass_context=True)
+    async def gift_scales(self, ctx, give_amount: int, *, member: str):
+        """Gift some of your scales to a friend."""
+
+        member_from = ctx.message.author
+        member_to = discord.utils.get(ctx.message.server.members, name=member)
+        member_from_scales = get_scales(member_from)
+
+        if give_amount <= member_from_scales:
+            add_scales(member_from, (-1 * give_amount))
+            add_scales(member_to, give_amount)
+            await self.bot.say("{0.mention}, you gifted **{1}** of your <:clifford_scales:303675725527908353> (scales) "
+                               "to {2.mention}! How kind!".format(member_from, give_amount, member_to))
+        else:
+            await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> (scales) to "
+                               "give {1.mention} that many!".format(member_from, member_to))
+
     # COMMAND: !roulette
     @commands.command(name='roulette', pass_context=True)
     async def scales_roulette(self, ctx, bet_amount: int, bet_on: str):
@@ -213,7 +231,7 @@ class Scales:
                            .format(roll_result, color))
 
         # Set Payouts and Whatnot
-        win = False;
+        win = False
         scales_won = (bet_amount * -1)
         if (bet_on == "red" and dictionary_red_black[roll_result] == "red") or \
            (bet_on == "black" and dictionary_red_black[roll_result] == "black") or \
