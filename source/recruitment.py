@@ -105,7 +105,7 @@ class Recruitment:
 
         # Handle Database
         try:
-            sql = "DELETE FROM recruitment WHERE `entry_id` = %s"
+            sql = "DELETE FROM recruitment WHERE `id` = %s"
             cur = db.cursor()
             cur.execute(sql, (entry_id,))
             db.commit()
