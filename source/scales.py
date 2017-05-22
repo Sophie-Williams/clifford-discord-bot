@@ -187,6 +187,11 @@ class Scales:
         member_to = discord.utils.get(ctx.message.server.members, name=member)
         member_from_scales = get_scales(member_from)
 
+        # Prevent Stealing
+        if give_amount < 0:
+            await self.bot.say("{0.mention}, you cannot steal scales, you thief!".format(member_from))
+            return
+
         if give_amount <= member_from_scales:
             add_scales(member_from, (-1 * give_amount))
             add_scales(member_to, give_amount)
@@ -195,6 +200,64 @@ class Scales:
         else:
             await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> (scales) to "
                                "give {1.mention} that many!".format(member_from, member_to))
+
+    # COMMAND: !promote
+    @commands.command(name='promote', pass_context=True)
+    async def promote_user(self, ctx):
+        """Promote yourself to the next highest rank if you have enough scales. Knight requires Squire and 2000 scales, Zealot requires Knight and 8000 scales."""
+
+        # Define member and server
+        member = ctx.message.author
+        server = ctx.message.server
+
+        # Define Roles
+        squire = discord.utils.get(server.roles, name='Squire')
+        knight = discord.utils.get(server.roles, name='Knight')
+        zealot = discord.utils.get(server.roles, name='Zealot')
+
+        # Current Information
+        current_scales = get_scales(member)
+        current_roles = member.roles
+        print(current_roles)
+
+        # Promote based on Role and Scales
+        try:
+            if squire in member.roles:
+                if current_scales >= 2000:
+                    add_scales(member, -2000)
+                    new_roles = [knight if x == squire else x for x in current_roles]
+                    await self.bot.replace_roles(member, *new_roles)
+                    await self.bot.say("{0.mention}, you have been promoted from **Squire** to **Knight** at the cost "
+                                       "of 2000 <:clifford_scales:303675725527908353> (scales). Congrats!"
+                                       .format(member))
+                    return
+                else:
+                    await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> "
+                                       "(scales) for this promotion. **Knight** requires 2000 scales; you have {1} "
+                                       "scales.".format(member, current_scales))
+            elif knight in member.roles:
+                if current_scales >= 8000:
+                    add_scales(member, -8000)
+                    new_roles = [zealot if x == knight else x for x in current_roles]
+                    await self.bot.replace_roles(member, *new_roles)
+                    await self.bot.say("{0.mention}, you have been promoted from **Knight** to **Zealot** at the cost "
+                                       "of 8000 <:clifford_scales:303675725527908353> (scales). Congrats!"
+                                       .format(member))
+                    return
+                else:
+                    await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> "
+                                       "(scales) for this promotion. **Zealot** requires 8000 scales; you have {1} "
+                                       "scales.".format(member, current_scales))
+            elif zealot in member.roles:
+                await self.bot.say("{0.mention}, you are already the highest member rank, **Zealot**! You cannot be "
+                                   "promoted further.".format(member))
+                return
+            else:
+                await self.bot.say("{0.mention}, you must be registered before you can be promote! Type `!register` to "
+                                   "become a **Squire**!".format(member))
+                return
+        except Exception as e:
+            await self.bot.say("There was an error promoting: " + str(e))
 
     # COMMAND: !roulette
     @commands.command(name='roulette', pass_context=True)
@@ -252,7 +315,7 @@ class Scales:
                 await self.bot.say("{0.mention}, you won **{1}** <:clifford_scales:303675725527908353> (scales) playing"
                                    " Roulette! Payout for your bet was {2}.".format(member, scales_won, payout_rate))
             else:
-                await self.bot.say("{0.mention}, you lost your scales <:clifford_scales:303675725527908353> (scales)"
+                await self.bot.say("{0.mention}, you lost your scales <:clifford_scales:303675725527908353>."
                                    .format(member))
         except Exception as e:
             await self.bot.say("There was an error adding scales: " + str(e))
