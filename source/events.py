@@ -29,12 +29,6 @@ class Events:
         # Set #events Channel
         event_channel = self.bot.get_channel('296694692135829504')
 
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
-
         # Make sure we have a date.
         if date is None:
             await self.bot.say('Error: You must enter a date in YYYY/MM/DD format.')
@@ -85,12 +79,6 @@ class Events:
         # EVENT CHANNEL ID: 296694692135829504
         event_channel = self.bot.get_channel('296694692135829504')
 
-        # Is the user allowed? (Must be staff)
-        if not is_staff(ctx.message.author):
-            await self.bot.say('{0.mention}, you must be a staff member to use this command.'
-                               .format(ctx.message.author))
-            return
-
         # Make sure we have a date.
         if event_id is None:
             await self.bot.say('Error: You must enter an event ID. Check the #events channel.')
@@ -105,14 +93,14 @@ class Events:
             sql = "UPDATE events SET `description` = %s WHERE `event_id` = %s"
             cur = db.cursor()
             cur.execute(sql, (desc, event_id))
-            cur.execute("SELECT `message_id` FROM events WHERE `event_id` = %s", (event_id,))
-            msg_id = cur.fetchone()
-            message = await self.bot.get_message(event_channel, msg_id[0])
+            cur.execute("SELECT `message_id`, `date`, `time`, `title` FROM events WHERE `event_id` = %s", (event_id,))
+            msg_row = cur.fetchone()
+            message = await self.bot.get_message(event_channel, msg_row[0])
 
-            msg_text = message.content + " \n**Description**: {0}".format(desc)
+            msg_text = "**Title**: {0} \n**Event ID**: {1} \n**Date & Time**: {2} at {3} (UTC) \n**Description**: {4}"
 
             # Update Message in Events Channel with Description
-            await self.bot.edit_message(message, msg_text)
+            await self.bot.edit_message(message, msg_text.format(msg_row[3], event_id, msg_row[1], msg_row[2], desc))
 
             db.commit()
             cur.close()
@@ -123,6 +111,41 @@ class Events:
 
         # Success Message
         await self.bot.say('{0.mention}, the event was successfully updated with a description.'
+                           .format(ctx.message.author))
+
+    # COMMAND: !events remove
+    @events.command(name='remove', pass_context=True, aliases=['delete'])
+    @commands.has_role("Staff")
+    async def events_remove(self, ctx, event_id: int):
+        """Adds a Description to an Event Given an Event ID."""
+
+        # EVENT CHANNEL ID: 296694692135829504
+        event_channel = self.bot.get_channel('296694692135829504')
+
+        # Make sure we have a date.
+        if event_id is None:
+            await self.bot.say('Error: You must enter an event ID. Check the #events channel.')
+            return
+
+        # Get the Message
+        try:
+            cur = db.cursor()
+            cur.execute("SELECT `message_id` FROM events WHERE `event_id` = %s", (event_id,))
+            msg_id = cur.fetchone()
+            message = await self.bot.get_message(event_channel, msg_id[0])
+
+            await self.bot.delete_message(message)
+
+            cur.execute("DELETE FROM events WHERE `event_id` = %s", (event_id,))
+            db.commit()
+            cur.close()
+        except Exception as e:
+            await self.bot.say('{0.mention}, there was an error removing the event: '
+                               .format(ctx.message.author) + str(e))
+            return
+
+        # Success Message
+        await self.bot.say('{0.mention}, the event was successfully removed from the events list.'
                            .format(ctx.message.author))
 
 
