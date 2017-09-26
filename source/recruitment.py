@@ -118,22 +118,16 @@ class Recruitment:
         # Display Success Message
         await self.bot.say('{0.message.author.mention}, the recruitment entry was successfully deleted!'.format(ctx))
 
-    # COMMAND: !recruit invite
-    @recruit.command(name='invite')
-    async def recruit_invite(self, duration: int):
+    # COMMAND: !invite
+    @commands.command(name='invite')
+    async def recruit_invite(self):
         """Provides an invite link to the Discord server. Set duration to 0 for permanent invite."""
-
-        # Default Duration 30 Minutes, Else Convert to Minutes
-        if duration is None:
-            duration = 1800
-        else:
-            duration *= 60
 
         # WELCOME CHANNEL ID: 141622052133142529
         welcome_channel = self.bot.get_channel('141622052133142529')
 
         # Create the Invite
-        new_invite = await self.bot.create_invite(welcome_channel, max_age=duration, max_users=0, unique=False)
+        new_invite = await self.bot.create_invite(welcome_channel, max_age=0, max_users=0, unique=False)
 
         # Send Message with Invite Link
         await self.bot.say('Your newly generated invite link is: {0.url}'.format(new_invite))
