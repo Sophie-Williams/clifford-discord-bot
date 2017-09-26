@@ -88,7 +88,6 @@ for i in list(range(0, 37)):
         dictionary_red_black[i] = "black"
 
 
-
 # ********************************************** #
 # GROUPED COMMANDS : SCALES ******************** #
 # ********************************************** #
@@ -180,12 +179,16 @@ class Scales:
 
     # COMMAND: !giftscales
     @commands.command(name='giftscales', pass_context=True)
-    async def gift_scales(self, ctx, give_amount: int, *, member: str):
+    async def gift_scales(self, ctx, give_amount: int, member_to: discord.Member):
         """Gift some of your scales to a friend."""
 
         member_from = ctx.message.author
-        member_to = discord.utils.get(ctx.message.server.members, name=member)
         member_from_scales = get_scales(member_from)
+
+        # Make Sure Member To Exists
+        if not member_to:
+            await self.bot.say("{0.mention}, you must supply a valid user on this server.".format(member_from))
+            return
 
         # Prevent Stealing
         if give_amount < 0:
@@ -223,30 +226,30 @@ class Scales:
         # Promote based on Role and Scales
         try:
             if squire in member.roles:
-                if current_scales >= 2000:
-                    add_scales(member, -2000)
+                if current_scales >= 500:
+                    add_scales(member, -500)
                     new_roles = [knight if x == squire else x for x in current_roles]
                     await self.bot.replace_roles(member, *new_roles)
                     await self.bot.say("{0.mention}, you have been promoted from **Squire** to **Knight** at the cost "
+                                       "of 500 <:clifford_scales:303675725527908353> (scales). Congrats!"
+                                       .format(member))
+                    return
+                else:
+                    await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> "
+                                       "(scales) for this promotion. **Knight** requires 500 scales; you have {1} "
+                                       "scales.".format(member, current_scales))
+            elif knight in member.roles:
+                if current_scales >= 2000:
+                    add_scales(member, -2000)
+                    new_roles = [zealot if x == knight else x for x in current_roles]
+                    await self.bot.replace_roles(member, *new_roles)
+                    await self.bot.say("{0.mention}, you have been promoted from **Knight** to **Zealot** at the cost "
                                        "of 2000 <:clifford_scales:303675725527908353> (scales). Congrats!"
                                        .format(member))
                     return
                 else:
                     await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> "
-                                       "(scales) for this promotion. **Knight** requires 2000 scales; you have {1} "
-                                       "scales.".format(member, current_scales))
-            elif knight in member.roles:
-                if current_scales >= 8000:
-                    add_scales(member, -8000)
-                    new_roles = [zealot if x == knight else x for x in current_roles]
-                    await self.bot.replace_roles(member, *new_roles)
-                    await self.bot.say("{0.mention}, you have been promoted from **Knight** to **Zealot** at the cost "
-                                       "of 8000 <:clifford_scales:303675725527908353> (scales). Congrats!"
-                                       .format(member))
-                    return
-                else:
-                    await self.bot.say("{0.mention}, you do not have enough <:clifford_scales:303675725527908353> "
-                                       "(scales) for this promotion. **Zealot** requires 8000 scales; you have {1} "
+                                       "(scales) for this promotion. **Zealot** requires 2000 scales; you have {1} "
                                        "scales.".format(member, current_scales))
             elif zealot in member.roles:
                 await self.bot.say("{0.mention}, you are already the highest member rank, **Zealot**! You cannot be "
@@ -258,6 +261,43 @@ class Scales:
                 return
         except Exception as e:
             await self.bot.say("There was an error promoting: " + str(e))
+
+    # COMMAND !buy
+    @commands.command(name='buy', pass_context=True, aliases=['purchase'])
+    async def buy_group(self, ctx, group: int = 0):
+        """Buy a special group from the list! Only 1-6 Available for Purchase."""
+
+        # Set Basic Stuff
+        member = ctx.message.author
+        server = ctx.message.server
+        current_scales = get_scales(member)
+
+        # Dictionary for Groups
+        store = {}
+        allowed = [1, 2, 3, 4, 5, 6]
+        store[1] = discord.utils.get(server.roles, name='Store 01 - Blue')
+        store[2] = discord.utils.get(server.roles, name='Store 02 - Fuchsia')
+        store[3] = discord.utils.get(server.roles, name='Store 03 - Green')
+        store[4] = discord.utils.get(server.roles, name='Store 04 - Orange')
+        store[5] = discord.utils.get(server.roles, name='Store 05 - Teal')
+        store[6] = discord.utils.get(server.roles, name='Store 06 - Yellow')
+
+        # Was a Group Entered?
+        if group not in allowed or group is None:
+            await self.bot.say("Available groups for purchase (500 scales) include: \n"
+                               "**(01) Blue** - Hex: #3498DB \n"
+                               "**(02) Fuchsia** - Hex: #E91E63 \n"
+                               "**(03) Green** - Hex: #07A700 \n"
+                               "**(04) Orange** - Hex: #E05203 \n"
+                               "**(05) Teal** - Hex: #1ABC9C \n"
+                               "**(06) Yellow** - Hex: #F1C40F")
+        else:
+            if current_scales >= 250:
+                add_scales(member, -250)
+                await self.bot.add_roles(member, store[group])
+                await self.bot.say("{0.mention}, you have successfully purchased your new color group!".format(member))
+            else:
+                await self.bot.say("{0.mention}, you do not have enough scales to purchase a color group.".format(member))
 
     # COMMAND: !roulette
     @commands.command(name='roulette', pass_context=True)
