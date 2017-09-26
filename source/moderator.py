@@ -11,31 +11,65 @@ class Moderator:
     def __init__(self, bot):
         self.bot = bot
 
-    # COMMAND: !set_game
+    # COMMAND: !setgame
     @commands.command()
     @commands.has_role("King")
-    async def set_game(self, *, game_name: str):
+    async def setgame(self, *, game_name: str):
         """Sets Clifford's currently playing game.."""
 
         await self.bot.change_presence(game=discord.Game(name=game_name))
 
-    # COMMAND: !give_role
+    # COMMAND: !giverole
     @commands.command(pass_context=True)
     @commands.has_role("Staff")
-    async def give_role(self, ctx, username: str, *, role_name: str):
-        """Assigns a role to a user."""
+    async def giverole(self, ctx, user: discord.Member, *, roletext: str):
+        """Assigns a role to a member."""
+
+        # Lowercase Role
+        role_name = roletext.lower()
 
         # List of Roles Staff Can Add To.
-        allowed_roles = ['Europe',
-                         'North America',
-                         'Oceania',
-                         'Overwatch',
-                         'League of Legends',
-                         'Co-op',
-                         'Minna-chan',
-                         'Squire',
-                         'Knight',
-                         'Zealot']
+        allowed_roles = ["eu",
+                         "europe",
+                         "na",
+                         "north america",
+                         "oce",
+                         "oceania",
+                         "lol",
+                         "league of legends",
+                         "coop",
+                         "co-op",
+                         "destiny",
+                         "d2",
+                         "destiny 2",
+                         "ow",
+                         "overwatch",
+                         "anime hour",
+                         "anime",
+                         "squire",
+                         "knight",
+                         "zealot"]
+
+        roles_dictionary = {"eu": "Europe",
+                            "europe": "Europe",
+                            "na": "North America",
+                            "north america": "North America",
+                            "oce": "Oceania",
+                            "oceania": "Oceania",
+                            "lol": "League of Legends",
+                            "league of legends": "League of Legends",
+                            "coop": "Co-op",
+                            "co-op": "Co-op",
+                            "destiny": "Destiny 2",
+                            "d2": "Destiny 2",
+                            "destiny 2": "Destiny 2",
+                            "ow": "Overwatch",
+                            "overwatch": "Overwatch",
+                            "anime hour": "Anime Hour",
+                            "anime": "Anime Hour",
+                            "squire": "Squire",
+                            "knight": "Knight",
+                            "zealot": "Zealot"}
 
         if role_name not in allowed_roles:
             await self.bot.say('{0.mention}, you may only assign users to public roles, Squire, Knight, or Zealot'
@@ -44,8 +78,7 @@ class Moderator:
 
         # Define role, then add role to member.
         try:
-            role = discord.utils.get(ctx.message.server.roles, name=role_name)
-            user = discord.utils.get(ctx.message.server.members, name=username)
+            role = discord.utils.get(ctx.message.server.roles, name=roles_dictionary[role_name])
             await self.bot.add_roles(user, role)
         except Exception as e:
             await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an granting the role to the user."
@@ -53,19 +86,19 @@ class Moderator:
             return
 
         # Success Message
+        username = user.nick if (user.nick is not None) else user.name
         await self.bot.say('{0.mention}, you have successfully added **{1}** to the group **{2}**'
-                           '.'.format(ctx.message.author, username, role_name))
+                           '.'.format(ctx.message.author, username, roles_dictionary[role_name]))
 
     # COMMAND: !kick
     @commands.command(name='kick', pass_context=True)
     @commands.has_role("Staff")
-    async def mod_kick(self, ctx, username: str, *, reason: str):
+    async def mod_kick(self, ctx, member: discord.Member, *, reason: str):
         """Kicks a user from the server."""
 
         # Add to DB and Post Message
         try:
             # Variables Needed
-            member = discord.utils.get(ctx.message.server.members, name=username)
             staffer = ctx.message.author
 
             # Handle Database
@@ -103,13 +136,12 @@ class Moderator:
     # COMMAND: !ban
     @commands.command(name='ban', pass_context=True)
     @commands.has_role("Staff")
-    async def mod_ban(self, ctx, username: str, *, reason: str):
+    async def mod_ban(self, ctx, member: discord.Member, *, reason: str):
         """Bans a user from the server."""
 
         # Add to DB and Post Message
         try:
             # Variables Needed
-            member = discord.utils.get(ctx.message.server.members, name=username)
             staffer = ctx.message.author
 
             # Handle Database
@@ -147,13 +179,13 @@ class Moderator:
     # COMMAND: !unban
     @commands.command(name='unban', pass_context=True)
     @commands.has_role("Staff")
-    async def mod_unban(self, ctx, username: str, *, reason: str):
+    async def mod_unban(self, ctx, user_id: str, *, reason: str):
         """Unbans a user from the server."""
 
         # Add to DB and Post Message
         try:
             # Variables Needed
-            member = discord.utils.get(self.bot.get_bans(ctx.message.server), name=username)
+            member = discord.utils.get(self.bot.get_bans(ctx.message.server), id=user_id)
             staffer = ctx.message.author
 
             # Handle Database
