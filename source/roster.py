@@ -49,9 +49,9 @@ class Roster:
         gameIcon = get_game_icon(game_abv)
         embed = discord.Embed(title=gameName + " Roster", colour=discord.Colour(0x55ff),
                               description="*The official roster for Zealot Gaming members who play " + gameName + ".*")
-        embed.set_author(name="Zealot Gaming", url="https://www.zealotgaming.com",
-                         icon_url="http://www.zealotgaming.com/discord/logos/zg.png")
-        embed.set_thumbnail(url="http://www.zealotgaming.com/discord/logos/" + gameIcon)
+        embed.set_author(name="Zealot Gaming", url="http://www.zealotgaming.com",
+                         icon_url="http://www.zealotgaming.com/discordicons/logos/zg.png")
+        embed.set_thumbnail(url="http://www.zealotgaming.com/discordicons/logos/" + gameIcon)
         embed.add_field(name="Discord Account", value=accounts, inline=True)
         embed.add_field(name="In-Game Name", value=names, inline=True)
 
