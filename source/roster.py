@@ -24,11 +24,11 @@ class Roster:
 
         # Handle Database
         try:
-            sql = "SELECT `discord_account`, `game_account` FROM roster WHERE `game_abv` = %s ORDER BY `discord_account`"
-            cur = db.cursor()
-            cur.execute(sql, (game_abv,))
-            result = cur.fetchall()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "SELECT `discord_account`, `game_account` FROM roster WHERE `game_abv` = %s ORDER BY `discord_account`"
+                cursor.execute(sql, (game_abv,))
+                result = cursor.fetchall()
+                cursor.close()
         except Exception:
             await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the roster for"
                                                              " you. I'm sorry!".format(ctx.message.author))
@@ -40,8 +40,8 @@ class Roster:
         i = 1
 
         for row in result:
-            accounts += ('**' + str(i) + '**. ' + row[0] + '\n')
-            names += ('**' + str(i) + '**. ' + row[1] + '\n')
+            accounts += ('**' + str(i) + '**. ' + row['discord_account'] + '\n')
+            names += ('**' + str(i) + '**. ' + row['game_account'] + '\n')
             i += 1
 
         # Create Embed Table
@@ -74,11 +74,11 @@ class Roster:
 
         # Handle Database
         try:
-            sql = "INSERT INTO roster (`discord_account`,`game_abv`,`game_account`) VALUES (%s, %s, %s)"
-            cur = db.cursor()
-            cur.execute(sql, (username, game_abv, ign))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "INSERT INTO roster (`discord_account`,`game_abv`,`game_account`) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (username, game_abv, ign))
+                db.commit()
+                cursor.close()
         except Exception:
             await self.bot.say('{0.message.author.mention}, there was an error adding your information to the roster.'
                                .format(ctx))
@@ -104,11 +104,11 @@ class Roster:
 
         # Handle Database
         try:
-            sql = "UPDATE roster SET `game_account` = %s WHERE `discord_account` = %s AND `game_abv` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (ign, username, game_abv))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "UPDATE roster SET `game_account` = %s WHERE `discord_account` = %s AND `game_abv` = %s"
+                cursor.execute(sql, (ign, username, game_abv))
+                db.commit()
+                cursor.close()
         except Exception:
             await self.bot.say('{0.message.author.mention}, there was an error updating your roster information.'
                                .format(ctx))
@@ -132,11 +132,11 @@ class Roster:
 
         # Handle Database
         try:
-            sql = "DELETE FROM roster WHERE `discord_account` = %s AND `game_abv` = %s AND `game_account` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (username, game_abv, ign))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "DELETE FROM roster WHERE `discord_account` = %s AND `game_abv` = %s AND `game_account` = %s"
+                cursor.execute(sql, (username, game_abv, ign))
+                db.commit()
+                cursor.close()
         except Exception:
             await self.bot.say('{0.message.author.mention}, there was an error deleting your roster information.'
                                .format(ctx))
