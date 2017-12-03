@@ -18,11 +18,11 @@ class Games:
 
         # Handle Database
         try:
-            sql = "SELECT `abv`, `name` FROM games ORDER BY `name`"
-            cur = db.cursor()
-            cur.execute(sql)
-            result = cur.fetchall()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "SELECT `abv`, `name` FROM games ORDER BY `name`"
+                cursor.execute(sql)
+                result = cursor.fetchall()
+                cursor.close()
         except Exception as e:
             await self.bot.send_message(ctx.message.channel, "{0.mention}, there was an error getting the list of games"
                                                              " for you. I'm sorry! ".format(ctx.message.author) + str(
@@ -34,8 +34,8 @@ class Games:
         names = ''
 
         for row in result:
-            abvs += (row[0] + '\n')
-            names += (row[1] + '\n')
+            abvs += (row['abv'] + '\n')
+            names += (row['name'] + '\n')
 
         # Create Embed Table
         embed = discord.Embed(title="Games List", colour=discord.Colour(0x55ff),
@@ -68,11 +68,11 @@ class Games:
 
         # Handle Database
         try:
-            sql = "INSERT INTO games (`abv`,`name`) VALUES (%s, %s)"
-            cur = db.cursor()
-            cur.execute(sql, (game_abv, game_name))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "INSERT INTO games (`abv`,`name`) VALUES (%s, %s)"
+                cursor.execute(sql, (game_abv, game_name))
+                db.commit()
+                cursor.close()
         except Exception as e:
             await self.bot.say('{0.mention}, there was an error adding the game to the games list. '
                                .format(ctx.message.author) + str(e))
@@ -95,11 +95,11 @@ class Games:
 
         # Handle Database
         try:
-            sql = "UPDATE games SET `abv` = %s, `name = %s WHERE `abv` = %s OR `name` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (game_abv, game_name, game_abv, game_name))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "UPDATE games SET `abv` = %s, `name = %s WHERE `abv` = %s OR `name` = %s"
+                cursor.execute(sql, (game_abv, game_name, game_abv, game_name))
+                db.commit()
+                cursor.close()
         except Exception as e:
             await self.bot.say('{0.mention}, there was an error updating the game in the games list. '
                                .format(ctx.message.author) + str(e))
@@ -123,11 +123,11 @@ class Games:
 
         # Handle Database
         try:
-            sql = "DELETE FROM games WHERE `abv` = %s OR `name` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (game_or_abv, game_or_abv))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "DELETE FROM games WHERE `abv` = %s OR `name` = %s"
+                cursor.execute(sql, (game_or_abv, game_or_abv))
+                db.commit()
+                cursor.close()
         except Exception as e:
             await self.bot.say("{0.mention}, there was an error deleting the game from the games list."
                                .format(ctx.message.author) + str(e))
@@ -151,11 +151,11 @@ class Games:
 
         # Handle Database
         try:
-            sql = "UPDATE games SET `icon_url` = %s WHERE `abv` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (icon, game_abv))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "UPDATE games SET `icon_url` = %s WHERE `abv` = %s"
+                cursor.execute(sql, (icon, game_abv))
+                db.commit()
+                cursor.close()
         except Exception as e:
             await self.bot.say("{0.mention}, there was an error adding the icon to the game."
                                .format(ctx.message.author) + str(e))
