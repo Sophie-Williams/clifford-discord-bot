@@ -1,12 +1,14 @@
 import discord
-import MySQLdb
+import pymysql.cursors
 
 
 # Define MySQL DB and Cursor Object
-db = MySQLdb.connect(host="localhost",
-                     user="discord_secure",
-                     passwd="password-here",
-                     db="discord")
+db = pymysql.connect(host="localhost",
+                     user="user_here",
+                     passwd="password_here",
+                     db="db_here",
+                     charset='utf8',
+                     cursorclass=pymysql.cursors.DictCursor)
 
 
 # ********************************************** #
@@ -16,10 +18,11 @@ db = MySQLdb.connect(host="localhost",
 # Check for Game Abbreviations
 def is_game_abv(game_abv: str):
     try:
-        sql = "SELECT 1 FROM games WHERE `abv` = %s LIMIT 1"
-        cur = db.cursor()
-        result = cur.execute(sql, (game_abv,))
-        cur.close()
+        with db.cursor() as cursor:
+            sql = "SELECT 1 FROM games WHERE `abv` = %s LIMIT 1"
+            cursor.execute(sql, (game_abv,))
+            result = cursor.fetchone()[0]
+            cursor.close()
     except Exception as e:
         print('Exception: ' + str(e))
         result = 0
@@ -31,10 +34,11 @@ def is_game_abv(game_abv: str):
 # Check for Game Names
 def is_game_name(game_name: str):
     try:
-        sql = "SELECT 1 FROM games WHERE `name` = %s LIMIT 1"
-        cur = db.cursor()
-        result = cur.execute(sql, (game_name,))
-        cur.close()
+        with db.cursor() as cursor:
+            sql = "SELECT 1 as `is_game` FROM games WHERE `name` = %s LIMIT 1"
+            cursor.execute(sql, (game_name,))
+            result = cursor.fetchone()['is_game']
+            cursor.close()
     except Exception as e:
         print('Exception: ' + str(e))
         result = 0
@@ -46,12 +50,12 @@ def is_game_name(game_name: str):
 # Get Game Name
 def get_game_name(game_abv: str):
     try:
-        sql = "SELECT `name` FROM games WHERE `abv` = %s"
-        cur = db.cursor()
-        cur.execute(sql, (game_abv,))
-        result = cur.fetchone()
-        cur.close()
-        return result[0]
+        with db.cursor() as cursor:
+            sql = "SELECT `name` FROM games WHERE `abv` = %s"
+            cursor.execute(sql, (game_abv,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result['name']
     except Exception as e:
         print('Exception: ' + str(e))
         return
@@ -60,12 +64,12 @@ def get_game_name(game_abv: str):
 # Get Game Icon
 def get_game_icon(game_abv: str):
     try:
-        sql = "SELECT `icon_url` FROM games WHERE `abv` = %s"
-        cur = db.cursor()
-        cur.execute(sql, (game_abv,))
-        result = cur.fetchone()
-        cur.close()
-        return result[0]
+        with db.cursor() as cursor:
+            sql = "SELECT `icon_url` FROM games WHERE `abv` = %s"
+            cursor.execute(sql, (game_abv,))
+            result = cursor.fetchone()
+            cursor.close()
+            return result['icon_url']
     except Exception as e:
         print('Exception: ' + str(e))
         return
