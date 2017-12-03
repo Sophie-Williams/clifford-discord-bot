@@ -46,24 +46,23 @@ class Events:
 
         # Add Event to Database
         try:
-            sql = "INSERT INTO events (`date`,`time`,`title`) VALUES (%s, %s, %s)"
-            cur = db.cursor()
-            cur.execute(sql, (date, time, title))
-            event_id = cur.lastrowid
+            with db.cursor() as cursor:
+                sql = "INSERT INTO events (`date`,`time`,`title`) VALUES (%s, %s, %s)"
+                cursor.execute(sql, (date, time, title))
+                event_id = cursor.lastrowid
 
-            msg_text = "**Title**: {0} \n**Event ID**: {1} \n**Date & Time**: {2} at {3} (UTC)"
+                msg_text = "**Title**: {0} \n**Event ID**: {1} \n**Date & Time**: {2} at {3} (UTC)"
 
-            # Add Message to Events Channel and Save Message ID
-            message = await self.bot.send_message(event_channel, msg_text.format(title, event_id, date, time))
+                # Add Message to Events Channel and Save Message ID
+                message = await self.bot.send_message(event_channel, msg_text.format(title, event_id, date, time))
 
-            cur.execute('UPDATE events SET `message_id` = %s WHERE `event_id` = %s', (message.id, event_id))
-            db.commit()
-            cur.close()
+                cursor.execute('UPDATE events SET `message_id` = %s WHERE `event_id` = %s', (message.id, event_id))
+                db.commit()
+                cursor.close()
 
         except Exception as e:
             await self.bot.say('{0.mention}, there was an error adding the event to the list. '
-                               .format(ctx.message.author)
-                          + str(e))
+                               .format(ctx.message.author) + str(e))
             return
 
         # Success Message
@@ -90,22 +89,22 @@ class Events:
             return
 
         try:
-            sql = "UPDATE events SET `description` = %s WHERE `event_id` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (desc, event_id))
-            cur.execute("SELECT `message_id`, `date`, `time`, `title` FROM events WHERE `event_id` = %s", (event_id,))
-            msg_row = cur.fetchone()
-            message = await self.bot.get_message(event_channel, msg_row[0])
+            with db.cursor() as cursor:
+                sql = "UPDATE events SET `description` = %s WHERE `event_id` = %s"
+                cursor.execute(sql, (desc, event_id))
+                cursor.execute("SELECT `message_id`, `date`, `time`, `title` FROM events WHERE `event_id` = %s", (event_id,))
+                msg_row = cursor.fetchone()
+                message = await self.bot.get_message(event_channel, msg_row['message_id'])
 
-            msg_text = "**Title**: {0} \n**Event ID**: {1} \n**Date & Time**: {2} at {3} (UTC) \n**Description**: {4}"
+                msg_text = "**Title**: {0} \n**Event ID**: {1} \n**Date & Time**: {2} at {3} (UTC) \n**Description**: {4}"
 
-            # Update Message in Events Channel with Description
-            await self.bot.edit_message(message, msg_text.format(msg_row[3], event_id, msg_row[1], msg_row[2], desc))
+                # Update Message in Events Channel with Description
+                await self.bot.edit_message(message, msg_text.format(msg_row['title'], event_id, msg_row['date'], msg_row['time'], desc))
 
-            db.commit()
-            cur.close()
+                db.commit()
+                cursor.close()
         except Exception as e:
-            await self.bot.say('{0.mention}, there was an error adding a description to the event. '
+            await self.bot.say('{0.mention}, there was an error adding a description to the event.'
                                .format(ctx.message.author) + str(e))
             return
 
@@ -129,16 +128,17 @@ class Events:
 
         # Get the Message
         try:
-            cur = db.cursor()
-            cur.execute("SELECT `message_id` FROM events WHERE `event_id` = %s", (event_id,))
-            msg_id = cur.fetchone()
-            message = await self.bot.get_message(event_channel, msg_id[0])
+            with db.cursor() as cursor:
+                sql = "SELECT `message_id` FROM events WHERE `event_id` = %s"
+                cursor.execute(sql, (event_id,))
+                msg_id = cursor.fetchone()
+                message = await self.bot.get_message(event_channel, msg_id['message_id'])
 
-            await self.bot.delete_message(message)
+                await self.bot.delete_message(message)
 
-            cur.execute("DELETE FROM events WHERE `event_id` = %s", (event_id,))
-            db.commit()
-            cur.close()
+                cursor.execute("DELETE FROM events WHERE `event_id` = %s", (event_id,))
+                db.commit()
+                cursor.close()
         except Exception as e:
             await self.bot.say('{0.mention}, there was an error removing the event: '
                                .format(ctx.message.author) + str(e))
