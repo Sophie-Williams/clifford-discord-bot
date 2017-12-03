@@ -102,27 +102,27 @@ class Moderator:
             staffer = ctx.message.author
 
             # Handle Database
-            sql = "INSERT INTO mod_log (`action`,`user`, `user_id`, `staff`, `staff_id`, `reason`) " \
-                  "VALUES ('kick', %s, %s, %s, %s, %s)"
-            cur = db.cursor()
-            cur.execute(sql, (str(member), member.id, str(staffer), staffer.id, reason))
+            with db.cursor() as cursor:
+                sql = "INSERT INTO mod_log (`action`,`user`, `user_id`, `staff`, `staff_id`, `reason`) " \
+                      "VALUES ('kick', %s, %s, %s, %s, %s)"
+                cursor.execute(sql, (str(member), member.id, str(staffer), staffer.id, reason))
 
-            # Save Last Row ID
-            case_id = cur.lastrowid
+                # Save Last Row ID
+                case_id = cursor.lastrowid
 
-            # Insert Message
-            log_channel = self.bot.get_channel('303262467205890051')
-            msg_text = "**Case #{0}** | Kick :boot: \n**User**: {1} ({2}) " \
-                       "\n**Moderator**: {3} ({4}) \n**Reason**: {5}"
+                # Insert Message
+                log_channel = self.bot.get_channel('303262467205890051')
+                msg_text = "**Case #{0}** | Kick :boot: \n**User**: {1} ({2}) " \
+                           "\n**Moderator**: {3} ({4}) \n**Reason**: {5}"
 
-            # Add Message to Events Channel and Save Message ID
-            case_message = await self.bot.send_message(log_channel, msg_text.format(case_id, str(member), member.id,
-                                                                                    str(staffer), staffer.id, reason))
-            cur.execute("UPDATE mod_log SET `message_id` = %s WHERE `case_id` = %s", (case_message.id, case_id))
+                # Add Message to Events Channel and Save Message ID
+                case_message = await self.bot.send_message(log_channel, msg_text.format(case_id, str(member), member.id,
+                                                                                        str(staffer), staffer.id, reason))
+                cursor.execute("UPDATE mod_log SET `message_id` = %s WHERE `case_id` = %s", (case_message.id, case_id))
 
-            # Finish Database Stuff and Commit
-            db.commit()
-            cur.close()
+                # Finish Database Stuff and Commit
+                db.commit()
+                cursor.close()
 
             # Kick the Member
             await self.bot.kick(member)
@@ -145,27 +145,27 @@ class Moderator:
             staffer = ctx.message.author
 
             # Handle Database
-            sql = "INSERT INTO mod_log (`action`,`user`, `user_id`, `staff`, `staff_id`, reason) " \
-                  "VALUES ('ban', %s, %s, %s, %s, %s)"
-            cur = db.cursor()
-            cur.execute(sql, (str(member), member.id, str(staffer), staffer.id, reason))
+            with db.cursor() as cursor:
+                sql = "INSERT INTO mod_log (`action`,`user`, `user_id`, `staff`, `staff_id`, reason) " \
+                      "VALUES ('ban', %s, %s, %s, %s, %s)"
+                cursor.execute(sql, (str(member), member.id, str(staffer), staffer.id, reason))
 
-            # Save Last Row ID
-            case_id = cur.lastrowid
+                # Save Last Row ID
+                case_id = cursor.lastrowid
 
-            # Insert Message
-            log_channel = self.bot.get_channel('303262467205890051')
-            msg_text = "**Case #{0}** | Ban :hammer: \n**User**: {1} ({2}) " \
-                       "\n**Moderator**: {3} ({4}) \n**Reason**: {5}"
+                # Insert Message
+                log_channel = self.bot.get_channel('303262467205890051')
+                msg_text = "**Case #{0}** | Ban :hammer: \n**User**: {1} ({2}) " \
+                           "\n**Moderator**: {3} ({4}) \n**Reason**: {5}"
 
-            # Add Message to Events Channel and Save Message ID
-            case_message = await self.bot.send_message(log_channel, msg_text.format(case_id, str(member), member.id,
-                                                                                    str(staffer), staffer.id, reason))
-            cur.execute("UPDATE mod_log SET `message_id` = %s WHERE `case_id` = %s", (case_message.id, case_id))
+                # Add Message to Events Channel and Save Message ID
+                case_message = await self.bot.send_message(log_channel, msg_text.format(case_id, str(member), member.id,
+                                                                                        str(staffer), staffer.id, reason))
+                cursor.execute("UPDATE mod_log SET `message_id` = %s WHERE `case_id` = %s", (case_message.id, case_id))
 
-            # Finish Database Stuff and Commit
-            db.commit()
-            cur.close()
+                # Finish Database Stuff and Commit
+                db.commit()
+                cursor.close()
 
             # Kick the Member
             await self.bot.ban(member, 0)
@@ -189,27 +189,27 @@ class Moderator:
             staffer = ctx.message.author
 
             # Handle Database
-            sql = "INSERT INTO mod_log (`action`,`user`, `user_id`, `staff`, `staff_id`, reason) " \
-                  "VALUES ('unban', %s, %s, %s, %s, %s)"
-            cur = db.cursor()
-            cur.execute(sql, (str(member), member.id, str(staffer), staffer.id, reason))
+            with db.cursor() as cursor:
+                sql = "INSERT INTO mod_log (`action`,`user`, `user_id`, `staff`, `staff_id`, reason) " \
+                      "VALUES ('unban', %s, %s, %s, %s, %s)"
+                cursor.execute(sql, (str(member), member.id, str(staffer), staffer.id, reason))
 
-            # Save Last Row ID
-            case_id = cur.lastrowid
+                # Save Last Row ID
+                case_id = cursor.lastrowid
 
-            # Insert Message
-            log_channel = self.bot.get_channel('303262467205890051')
-            msg_text = "**Case #{0}** | Unban :peace: \n**User**: {1} ({2}) " \
-                       "\n**Moderator**: {3} ({4}) \n**Reason**: {5}"
+                # Insert Message
+                log_channel = self.bot.get_channel('303262467205890051')
+                msg_text = "**Case #{0}** | Unban :peace: \n**User**: {1} ({2}) " \
+                           "\n**Moderator**: {3} ({4}) \n**Reason**: {5}"
 
-            # Add Message to Events Channel and Save Message ID
-            case_message = await self.bot.send_message(log_channel, msg_text.format(case_id, str(member), member.id,
-                                                                                    str(staffer), staffer.id, reason))
-            cur.execute("UPDATE mod_log SET `message_id` = %s WHERE `case_id` = %s", (case_message.id, case_id))
+                # Add Message to Events Channel and Save Message ID
+                case_message = await self.bot.send_message(log_channel, msg_text.format(case_id, str(member), member.id,
+                                                                                        str(staffer), staffer.id, reason))
+                cursor.execute("UPDATE mod_log SET `message_id` = %s WHERE `case_id` = %s", (case_message.id, case_id))
 
-            # Finish Database Stuff and Commit
-            db.commit()
-            cur.close()
+                # Finish Database Stuff and Commit
+                db.commit()
+                cursor.close()
 
             # Kick the Member
             await self.bot.ban(member, 0)
