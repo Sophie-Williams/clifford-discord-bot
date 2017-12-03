@@ -8,18 +8,14 @@ import random
 # Check if User Has Been Initialized with Scales
 def has_scales(member: discord.Member):
     # Query Database
-    sql = "SELECT 1 FROM scales WHERE `username` = %s"
-    cur = db.cursor()
-    cur.execute(sql, (str(member),))
-    entry = cur.fetchone()
-    db.commit()
-    cur.close()
+    with db.cursor() as cursor:
+        sql = "SELECT 1 as `has_scales` FROM scales WHERE `username` = %s"
+        cursor.execute(sql, (str(member),))
+        entry = cursor.fetchone()
+        cursor.close()
 
     # Return the Result (True/False)
-    if entry is not None:
-        return entry[0] == 1
-    else:
-        return False
+    return entry['has_scales'] == 1
 
 
 # Initialize User with Scales
@@ -27,26 +23,27 @@ def start_scales(member: discord.Member):
 
     if not has_scales(member):
         # Initialize to Zero
-        sql = "INSERT INTO scales (`username`) VALUES (%s)"
-        cur = db.cursor()
-        cur.execute(sql, (str(member),))
-        db.commit()
-        cur.close()
+        with db.cursor() as cursor:
+            sql = "INSERT INTO scales (`username`) VALUES (%s)"
+            cursor.execute(sql, (str(member),))
+            db.commit()
+            cursor.close()
 
 
 # Get User's Current Scales
 def get_scales(member: discord.Member):
     # Query Database
-    sql = "SELECT `total` FROM scales WHERE `username` = %s"
-    cur = db.cursor()
-    cur.execute(sql, (str(member),))
-    entry = cur.fetchone()
-    db.commit()
-    cur.close()
+    with db.cursor() as cursor:
+        sql = "SELECT `total` FROM scales WHERE `username` = %s"
+        print(str(member))
+        cursor.execute(sql, (str(member),))
+        entry = cursor.fetchone()
+        cursor.close()
+
 
     # Return the Number of Scales
-    if entry[0] is not None:
-        return entry[0]
+    if entry['total'] is not None:
+        return entry['total']
     else:
         return 0
 
@@ -59,11 +56,11 @@ def add_scales(member: discord.Member, scales: int):
     new_scales = current_scales + scales
 
     # Give Points to User
-    sql = "UPDATE scales SET `total` = %s WHERE username = %s"
-    cur = db.cursor()
-    cur.execute(sql, (new_scales, str(member)))
-    db.commit()
-    cur.close()
+    with db.cursor() as cursor:
+        sql = "UPDATE scales SET `total` = %s WHERE username = %s"
+        cursor.execute(sql, (new_scales, str(member)))
+        db.commit()
+        cursor.close()
 
 
 # Used for Roulette
@@ -111,14 +108,14 @@ class Scales:
         today_date = today.date()
 
         # Get User's Last Claim Date
-        sql = "SELECT `last_claimed_date` FROM scales WHERE username = %s"
-        cur = db.cursor()
-        cur.execute(sql, (str(member),))
-        result = cur.fetchone()
-        db.commit()
-        cur.close()
-        if result[0] is not None:
-            last_date = datetime.strptime(str(result[0]), "%Y-%m-%d").date()
+        with db.cursor() as cursor:
+            sql = "SELECT `last_claimed_date` FROM scales WHERE username = %s"
+            cursor.execute(sql, (str(member),))
+            result = cursor.fetchone()
+            db.commit()
+            cursor.close()
+        if result['last_claimed_date'] is not None:
+            last_date = datetime.strptime(str(result['last_claimed_date']), "%Y-%m-%d").date()
         else:
             last_date = today_date - timedelta(1)
 
@@ -144,11 +141,11 @@ class Scales:
         # Grant the Scales to the User
         try:
             add_scales(member, added_scales)
-            sql = "UPDATE scales SET `last_claimed_date` = %s WHERE `username` = %s"
-            cur = db.cursor()
-            cur.execute(sql, (datetime.strftime(today, "%Y-%m-%d"), str(member)))
-            db.commit()
-            cur.close()
+            with db.cursor() as cursor:
+                sql = "UPDATE scales SET `last_claimed_date` = %s WHERE `username` = %s"
+                cursor.execute(sql, (datetime.strftime(today, "%Y-%m-%d"), str(member)))
+                db.commit()
+                cursor.close()
         except Exception as e:
             await self.bot.say("{0.mention}, there was an error awarding you your scales. ".format(member) + str(e))
             return
